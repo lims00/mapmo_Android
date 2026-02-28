@@ -7,6 +7,7 @@ import com.a6w.memo.common.model.MapMarkerData
 import com.a6w.memo.domain.model.Mapmo
 import com.a6w.memo.domain.model.MapmoList
 import com.a6w.memo.domain.repository.MapmoListRepository
+import com.a6w.memo.route.home.ui.model.HomeListUiItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,9 +67,28 @@ class HomeViewModel @Inject constructor(
         val mapmoList = getMapmoList()
         val mapMarkerList = getMapMarkerList(mapmoList)
 
+        // Generate List UI Items
+        val dataList = buildList {
+            mapmoList?.list?.forEach { mapmoGroup ->
+                // Label Item
+                mapmoGroup.labelItem?.let { label ->
+                    add(HomeListUiItem.LabelUiItem(
+                        label = label,
+                    ))
+                }
+
+                // Each Mapmo Items
+                mapmoGroup.mapmoList.forEach { mapmo ->
+                    add(HomeListUiItem.MapmoUiItem(
+                        mapmo = mapmo,
+                    ))
+                }
+            }
+        }
+
         // Update UI State
         _uiState.value = _uiState.value.copy(
-            mapmoList = mapmoList,
+            dataList = dataList,
             mapMarkerList = mapMarkerList,
         )
 

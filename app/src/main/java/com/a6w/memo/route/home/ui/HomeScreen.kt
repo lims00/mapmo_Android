@@ -31,6 +31,7 @@ import com.a6w.memo.domain.model.Mapmo
 import com.a6w.memo.domain.model.MapmoList
 import androidx.core.graphics.toColorInt
 import com.a6w.memo.common.util.FirebaseLogUtil
+import com.a6w.memo.route.home.ui.model.HomeListUiItem
 
 private val BOTTOM_SHEET_HEIGHT_MINIMUM_DP = 180.dp
 private val BOTTOM_SHEET_RADIUS_DP = 16.dp
@@ -55,7 +56,7 @@ fun HomeScreen(
 
     // UI States
     val uiState = viewModel.uiState.collectAsState()
-    val mapmoList = uiState.value.mapmoList
+    val dataList = uiState.value.dataList
     val mapCameraFocus = uiState.value.mapCameraFocus
     val mapMarkerList = uiState.value.mapMarkerList
 
@@ -74,7 +75,7 @@ fun HomeScreen(
                 MapmoListView(
                     modifier = Modifier
                         .fillMaxSize(),
-                    mapmoList = mapmoList,
+                    dataList = dataList,
                     onClickMapmo = navigateToMapmo,
                 )
             }
@@ -101,40 +102,36 @@ fun HomeScreen(
 @Composable
 private fun MapmoListView(
     modifier: Modifier = Modifier,
-    mapmoList: MapmoList?,
+    dataList: List<HomeListUiItem>?,
     onClickMapmo: (mapmoID: String?) -> Unit,
 ) {
-    if(mapmoList == null) return
+    if(dataList == null) return
 
     LazyColumn(
         modifier = modifier,
     ) {
-        val labelList = mapmoList.list
-
-        labelList.forEach {
-            val label = it.labelItem
-            val mapmoList = it.mapmoList
-
-            // Label Item
-            // - Show only when label is not null
-            label?.let {
-                item {
+        // Add each items to UI
+        // - Items might be Label or Mapmo
+        items(dataList.size) { idx ->
+            when(val targetItem = dataList[idx]) {
+                // Label Item
+                is HomeListUiItem.LabelUiItem -> {
+                    val label = targetItem.label
                     LabelItem(
                         modifier = Modifier,
                         label = label,
                     )
                 }
-            }
 
-            // Mapmo Items
-            items(mapmoList.size) { idx ->
-                val mapmo = mapmoList[idx]
-                val mapmoID = mapmo.mapmoID
-
-                MapmoItem(
-                    mapmo = mapmo,
-                    onClick = { onClickMapmo(mapmoID) },
-                )
+                // Mapmo Item
+                is HomeListUiItem.MapmoUiItem -> {
+                    val mapmo = targetItem.mapmo
+                    val mapmoID = mapmo.mapmoID
+                    MapmoItem(
+                        mapmo = mapmo,
+                        onClick = { onClickMapmo(mapmoID) },
+                    )
+                }
             }
         }
     }
