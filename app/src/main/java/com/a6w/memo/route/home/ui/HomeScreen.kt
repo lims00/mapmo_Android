@@ -3,6 +3,7 @@ package com.a6w.memo.route.home.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -73,7 +74,8 @@ fun HomeScreen(
             // Mapmo List
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxHeight(0.5f)
+                    .fillMaxWidth()
             ) {
                 MapmoListView(
                     modifier = Modifier
