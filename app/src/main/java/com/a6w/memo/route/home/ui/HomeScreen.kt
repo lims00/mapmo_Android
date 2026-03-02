@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.a6w.memo.common.model.MapCameraFocusData
@@ -24,15 +26,16 @@ import com.a6w.memo.common.model.MapMarkerData
 import com.a6w.memo.common.ui.KakaoMapView
 import com.a6w.memo.route.home.viewmodel.HomeViewModel
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.a6w.memo.domain.model.Label
 import com.a6w.memo.domain.model.Mapmo
-import com.a6w.memo.domain.model.MapmoList
 import androidx.core.graphics.toColorInt
 import com.a6w.memo.common.util.FirebaseLogUtil
 import com.a6w.memo.route.home.ui.model.HomeListUiItem
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 private val BOTTOM_SHEET_HEIGHT_MINIMUM_DP = 180.dp
 private val BOTTOM_SHEET_RADIUS_DP = 16.dp
@@ -82,6 +85,7 @@ fun HomeScreen(
                         .fillMaxSize(),
                     dataList = dataList,
                     onClickMapmo = navigateToMapmo,
+                    onScrollList = viewModel::moveMapCameraToMapmo,
                 )
             }
         },
@@ -109,11 +113,36 @@ private fun MapmoListView(
     modifier: Modifier = Modifier,
     dataList: List<HomeListUiItem>?,
     onClickMapmo: (mapmoID: String?) -> Unit,
+    onScrollList: (mapmo: Mapmo) -> Unit,
 ) {
     if(dataList == null) return
 
+    // List state for mapmo list
+    val listState = rememberLazyListState()
+
+    // Effect for watching list scroll
+    LaunchedEffect(listState) {
+        // Check for first item of list, and check if it is changed
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .distinctUntilChanged()
+            .collect { idx ->
+                // Get target item from list
+                when(val targetItem = dataList[idx]) {
+                    // Mapmo Item
+                    is HomeListUiItem.MapmoUiItem -> {
+                        // Callback with target mapmo
+                        val targetMapmo = targetItem.mapmo
+                        onScrollList(targetMapmo)
+                    }
+
+                    else -> {}
+                }
+            }
+    }
+
     LazyColumn(
         modifier = modifier,
+        state = listState,
     ) {
         // Add each items to UI
         // - Items might be Label or Mapmo
