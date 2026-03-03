@@ -44,41 +44,6 @@ class MapmoListRepositoryImpl: MapmoListRepository {
                 .get()
                 .await()
 
-            // Convert Firestore documents into a list of Mapmo objects
-            val mapmoList = snapshot.documents.mapNotNull { document ->
-                // Skip if GeoPoint is missing (invalid Mapmo data)
-                val geoPoint = document.getGeoPoint(FirestoreKey.DOCUMENT_KEY_LOCATION)
-                    ?: return@mapNotNull null
-
-                // Location Lat/Lng Info
-                val mapmoLat = geoPoint.latitude
-                val mapmoLng = geoPoint.longitude
-
-                // Location Data
-                val location = Location(
-                    lat = mapmoLat,
-                    lng = mapmoLng,
-                )
-
-                // Only create Mapmo if location exists
-                val mapmoID = document.id
-                val content = document.getString(FirestoreKey.DOCUMENT_KEY_CONTENT) ?: ""
-                val isNotifyEnabled =
-                    document.getBoolean(FirestoreKey.DOCUMENT_KEY_IS_NOTIFY_ENABLED) ?: false
-                val labelID = document.getString(FirestoreKey.DOCUMENT_KEY_LABEL_ID) // nullable
-                val updatedAt =
-                    document.getTimestamp(FirestoreKey.DOCUMENT_KEY_UPDATED_AT)?.seconds ?: -1
-                // Mapmo Data
-                Mapmo(
-                    mapmoID = mapmoID,
-                    content = content,
-                    isNotifyEnabled = isNotifyEnabled,
-                    labelID = labelID,
-                    location = location,
-                    updatedAt = updatedAt,
-                )
-            }
-
             // Fetch all label documents for the user
             val labelSnapshot = labelCollection
                 .whereEqualTo(FirestoreKey.DOCUMENT_KEY_USER_ID, userID)
@@ -114,6 +79,47 @@ class MapmoListRepositoryImpl: MapmoListRepository {
                 )
             }
 
+            // Convert Firestore documents into a list of Mapmo objects
+            val mapmoList = snapshot.documents.mapNotNull { document ->
+                val mapmoID = document.id
+                val content = document.getString(FirestoreKey.DOCUMENT_KEY_CONTENT) ?: ""
+                val isNotifyEnabled =
+                    document.getBoolean(FirestoreKey.DOCUMENT_KEY_IS_NOTIFY_ENABLED) ?: false
+                val labelID = document.getString(FirestoreKey.DOCUMENT_KEY_LABEL_ID)
+                val updatedAt =
+                    document.getTimestamp(FirestoreKey.DOCUMENT_KEY_UPDATED_AT)?.seconds ?: -1
+                var location = Location(lat = 0.0, lng = 0.0)
+
+                // Determine location
+                 if (labelID != null) {
+                    // Use location from the matched label if labelID exists
+                    val label = labels.find { it.id == labelID }
+                     location = label?.location ?: Location(lat = 0.0, lng = 0.0)
+                } else {
+                    // Use Mapmo's own location if labelID is null
+                    val geoPoint = document.getGeoPoint(FirestoreKey.DOCUMENT_KEY_LOCATION)
+                    if (geoPoint != null) {
+                        location = Location(
+                            lat = geoPoint.latitude,
+                            lng = geoPoint.longitude,
+                        )
+                    } else {
+                        // Skip if location data is missing
+                        return@mapNotNull null
+                    }
+                }
+
+                // Mapmo Data
+                Mapmo(
+                    mapmoID = mapmoID,
+                    content = content,
+                    isNotifyEnabled = isNotifyEnabled,
+                    labelID = labelID,
+                    location = location,
+                    updatedAt = updatedAt,
+                )
+            }
+
             // Group mapmos by labelID
             val grouped = mapmoList.groupBy { it.labelID }
 
@@ -133,7 +139,7 @@ class MapmoListRepositoryImpl: MapmoListRepository {
 
             // Store in cache
             mapmoListCache[userID] = mapmoListResult
-
+            println(mapmoListResult)
             // Return final MapmoList result
             return mapmoListResult
         } catch (e: Exception) {
