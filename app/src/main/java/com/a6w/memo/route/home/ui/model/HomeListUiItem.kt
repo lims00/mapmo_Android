@@ -1,7 +1,6 @@
 package com.a6w.memo.route.home.ui.model
 
-import com.a6w.memo.domain.model.Label
-import com.a6w.memo.domain.model.Mapmo
+import com.a6w.memo.domain.model.Location
 
 /**
  * Mapmo List UI Item
@@ -11,11 +10,16 @@ import com.a6w.memo.domain.model.Mapmo
 sealed interface HomeListUiItem {
     // Item for label
     data class LabelUiItem(
-        val label: Label,
+        val labelColor: String,
+        val labelID: String,
+        val labelName: String,
     ): HomeListUiItem
 
     // Item for mapmo
     data class MapmoUiItem(
-        val mapmo: Mapmo,
+        val mapmoID: String,
+        val mapmoLocation: Location,
+        val mapmoTitle: String,
+        val mapmoUpdatedAt: String,
     ): HomeListUiItem
 }
