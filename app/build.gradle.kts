@@ -31,6 +31,7 @@ android {
 
         // Kakao Map Native Key
         buildConfigField("String", "KAKAO_MAP_NATIVE_KEY", "${localProperties["KAKAO_MAP_NATIVE_KEY"]}")
+        buildConfigField("String", "KAKAO_REST_API_KEY", "${localProperties["KAKAO_REST_API_KEY"]}")
     }
 
     buildTypes {
