@@ -9,7 +9,7 @@ import com.a6w.memo.domain.model.Location
  */
 interface GeofenceRepository {
     // Register geofencing
-    fun registerGeofence(mapmoID: String, location: Location): Result<Unit>
+    suspend fun registerGeofence(mapmoID: String, location: Location): Result<Unit>
     // Unregister geofencing
     fun unregisterGeofence(mapmoID: String): Result<Unit>
 }
