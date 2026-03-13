@@ -27,4 +27,5 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.javax.inject)
     implementation(project(":domain"))
+    implementation(libs.androidx.work.runtime.ktx)
 }
