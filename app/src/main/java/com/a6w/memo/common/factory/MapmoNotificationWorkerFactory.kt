@@ -5,6 +5,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import com.a6w.memo.data.worker.MapmoNotificationWorker
+import com.a6w.memo.domain.repository.LabelRepository
 import com.a6w.memo.domain.repository.MapmoRepository
 import com.a6w.memo.domain.service.MapmoNotificationService
 import javax.inject.Inject
@@ -15,7 +16,8 @@ import kotlin.jvm.java
  * - Generates instance of [MapmoNotificationWorker] with Android Context
  */
 class MapmoNotificationWorkerFactory @Inject constructor(
-    private val repository: MapmoRepository,
+    private val labelRepository: LabelRepository,
+    private val mapmoRepository: MapmoRepository,
     private val notificationService: MapmoNotificationService
 ): WorkerFactory() {
     // Create Mapmo Notification Worker
@@ -31,7 +33,8 @@ class MapmoNotificationWorkerFactory @Inject constructor(
                 MapmoNotificationWorker(
                     context = appContext,
                     params = workerParameters,
-                    repository = repository,
+                    labelRepository = labelRepository,
+                    mapmoRepository = mapmoRepository,
                     notificationService = notificationService,
                 )
             }
