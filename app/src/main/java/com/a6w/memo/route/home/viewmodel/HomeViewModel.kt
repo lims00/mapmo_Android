@@ -8,7 +8,6 @@ import com.a6w.memo.common.util.DatetimeUtil
 import com.a6w.memo.domain.model.Label
 import com.a6w.memo.domain.model.Mapmo
 import com.a6w.memo.domain.model.MapmoList
-import com.a6w.memo.domain.repository.LabelRepository
 import com.a6w.memo.domain.repository.MapmoListRepository
 import com.a6w.memo.route.home.ui.model.HomeListUiItem
 import dagger.hilt.android.lifecycle.HiltViewModel
