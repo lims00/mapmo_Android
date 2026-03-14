@@ -152,33 +152,39 @@ private fun addMarkers(
     labelManager: LabelManager?,
     markers: List<MapMarkerData>?,
 ) {
-    labelManager?.layer?.let {
-        // Generate kakao map label style and cache it
-        val labelStyles = getKakaoMapLabelStyles()
+    val layer = labelManager?.layer ?: return
+    val markerList = markers ?: return
 
-        // Add each marker infos as label on kakap map
-        markers?.forEach { markerInfo ->
-            // Marker infos
-            val markerLat = markerInfo.latitude.toDouble()
-            val markerLng = markerInfo.longitude.toDouble()
-            val markerTitle = markerInfo.markerTitle
-            // TODO: Implement OnClick Event
-            //    KakaoMap Label does not support onClick Event
-            val onMarkerClick = markerInfo.onClick
+    // Marker groups by same locations
+    val groupedMarkers = markerList.groupBy {
+        LatLng.from(it.latitude.toDouble(), it.longitude.toDouble())
+    }
 
-            // Generate Label data based on marker info
-            val labelPosition = LatLng.from(markerLat, markerLng)
-            val labelText = LabelTextBuilder().setTexts(markerTitle)
+    // Generate kakao map label style and cache it
+    val labelStyles = getKakaoMapLabelStyles()
 
-            // Setup Label Option
-            val labelOption = LabelOptions.from(labelPosition).apply {
-                setStyles(labelStyles)
-                setTexts(labelText)
-            }
-
-            // Add label to kakao map
-            it.addLabel(labelOption)
+    groupedMarkers.forEach { (position, infoList) ->
+        // Marker title
+        // - If grouped size is 1, display only its title
+        // - If size is more than 1, show count beside title
+        val mainTitle = infoList.first().markerTitle
+        val displayTitle = if (infoList.size > 1) {
+            "$mainTitle +${infoList.size - 1}"
+        } else {
+            mainTitle
         }
+
+        // Generate Label data based on marker info
+        val labelText = LabelTextBuilder().setTexts(displayTitle)
+
+        // Setup Label Option
+        val labelOption = LabelOptions.from(position).apply {
+            setStyles(labelStyles)
+            setTexts(labelText)
+        }
+
+        // Add label to kakao map
+        layer.addLabel(labelOption)
     }
 }
 
