@@ -10,6 +10,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
 /**
  * MapmoRepositoryImpl
@@ -23,7 +24,7 @@ import kotlinx.coroutines.tasks.await
  * - Update an existing Mapmo
  * - Cache the mapmo Data
  */
-class MapmoRepositoryImpl: MapmoRepository {
+class MapmoRepositoryImpl @Inject constructor(): MapmoRepository {
     private val firestoreDB = FirebaseFirestore.getInstance()
     private val mapmoCollection by lazy { firestoreDB.collection(FirestoreKey.COLLECTION_KEY_MAPMO) }
 
