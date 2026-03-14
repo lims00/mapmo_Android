@@ -93,11 +93,8 @@ fun MapmoScreen(
     navigationPop: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isEditing by viewModel.isEditing.collectAsStateWithLifecycle()
     val editingContent by viewModel.editingContent.collectAsStateWithLifecycle()
     val labelList by viewModel.labelList.collectAsStateWithLifecycle()
-    val isLabelSelectorOpen by viewModel.isLabelSelectorOpen.collectAsStateWithLifecycle()
-    val isLabelListLoading by viewModel.isLabelListLoading.collectAsStateWithLifecycle()
 
     // Triggers data load once when the screen enters composition.
     LaunchedEffect(Unit) {
@@ -105,6 +102,13 @@ fun MapmoScreen(
     }
 
     val mapmo = uiState.mapmo
+    val label =  uiState.label
+    val mapCameraFocus = uiState.mapCameraFocus
+    val mapMarkerList = uiState.mapMarkerList
+
+    val isEditing = uiState.isEditing
+    val isLabelSelectorOpen = uiState.isLabelSelectorOpen
+    val isLabelListLoading = uiState.isLabelListLoading
 
     Column(modifier = modifier.fillMaxSize()) {
         MapmoTopBar(
@@ -119,14 +123,14 @@ fun MapmoScreen(
             mapmo != null -> MapmoContent(
                 modifier = Modifier.weight(1f),
                 mapmo = mapmo,
-                label = uiState.label,
+                label = label,
                 labelList = labelList,
                 isEditing = isEditing,
                 isLabelSelectorOpen = isLabelSelectorOpen,
                 isLabelListLoading = isLabelListLoading,
                 editingContent = editingContent,
-                mapCameraFocus = uiState.mapCameraFocus,
-                mapMarkerList = uiState.mapMarkerList,
+                mapCameraFocus = mapCameraFocus,
+                mapMarkerList = mapMarkerList,
                 onContentChange = { viewModel.updateEditingContent(it) },
                 onNotificationToggle = { viewModel.toggleNotification() },
                 onLabelChipClick = { viewModel.loadLabelList() },
