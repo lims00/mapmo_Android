@@ -8,7 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.a6w.memo.route.home.ui.HomeScreen
-import com.a6w.memo.route.mapmo.MapmoScreen
+import com.a6w.memo.route.mapmo.ui.MapmoScreen
 import com.a6w.memo.route.setting.SettingScreen
 
 /**

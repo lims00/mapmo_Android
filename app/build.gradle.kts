@@ -78,6 +78,7 @@ dependencies {
 
     // Hilt Dependency
     implementation(libs.hilt.android)
+    implementation(libs.androidx.compose.foundation)
     ksp(libs.hilt.compiler)
 
     // Project Dependency
@@ -105,4 +106,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    // Material Icons
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+
 }

@@ -1,7 +1,9 @@
 package com.a6w.memo.di
 
+import com.a6w.memo.data.repository.LabelRepositoryImpl
 import com.a6w.memo.data.repository.MapmoListRepositoryImpl
 import com.a6w.memo.data.repository.MapmoRepositoryImpl
+import com.a6w.memo.domain.repository.LabelRepository
 import com.a6w.memo.domain.repository.MapmoListRepository
 import com.a6w.memo.domain.repository.MapmoRepository
 import dagger.Module
@@ -20,4 +22,8 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideMapmoListRepository(): MapmoListRepository = MapmoListRepositoryImpl()
+
+    @Provides
+    @Singleton
+    fun provideLabelRepository(): LabelRepository = LabelRepositoryImpl()
 }

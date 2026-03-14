@@ -19,6 +19,7 @@ ksp = "2.1.0-1.0.29"
 lifecycleRuntimeKtx = "2.10.0"
 navigationCompose = "2.9.7"
 jetbrainsKotlinJvm = "2.1.0"
+foundation = "1.10.4"
 retrofit = "3.0.0"
 
 [libraries]
@@ -47,6 +48,7 @@ javax-inject = { module = "javax.inject:javax.inject", version.ref = "javaxInjec
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kakao-map = { module = "com.kakao.maps.open:android", version.ref = "kakaoMap" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 
