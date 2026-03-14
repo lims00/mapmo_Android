@@ -1,6 +1,5 @@
 package com.a6w.memo.di
 
-import android.app.PendingIntent
 import com.a6w.memo.data.repository.GeofenceRepositoryImpl
 import com.a6w.memo.data.repository.LabelRepositoryImpl
 import com.a6w.memo.data.repository.MapmoListRepositoryImpl
@@ -9,32 +8,36 @@ import com.a6w.memo.domain.repository.GeofenceRepository
 import com.a6w.memo.domain.repository.LabelRepository
 import com.a6w.memo.domain.repository.MapmoListRepository
 import com.a6w.memo.domain.repository.MapmoRepository
-import com.google.android.gms.location.GeofencingClient
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RepositoryModule {
-    @Provides
+abstract class RepositoryModule {
+    @Binds
     @Singleton
-    fun provideGeofenceRepository(
-        geofencingClient: GeofencingClient,
-        geofencePendingIntent: PendingIntent,
-    ): GeofenceRepository = GeofenceRepositoryImpl(geofencingClient, geofencePendingIntent)
+    abstract fun bindGeofenceRepository(
+        impl: GeofenceRepositoryImpl
+    ): GeofenceRepository
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideMapmoRepository(): MapmoRepository = MapmoRepositoryImpl()
+    abstract fun bindLabelRepository(
+        impl: LabelRepositoryImpl
+    ): LabelRepository
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideMapmoListRepository(): MapmoListRepository = MapmoListRepositoryImpl()
+    abstract fun bindMapmoRepository(
+        impl: MapmoRepositoryImpl
+    ): MapmoRepository
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideLabelRepository(): LabelRepository = LabelRepositoryImpl()
+    abstract fun bindMapmoListRepository(
+        impl: MapmoListRepositoryImpl
+    ): MapmoListRepository
 }
