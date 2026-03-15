@@ -8,7 +8,7 @@ import java.util.UUID
  * - Send GATT Command to BLE Device
  */
 interface BleRepository {
-    fun sendGattCommand(
+    suspend fun sendGattCommand(
         btAddress: String,
         serviceUuid: UUID,
         characteristicUuid: UUID,
