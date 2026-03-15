@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.a6w.memo.common.model.MapCameraFocusData
 import com.a6w.memo.common.model.MapMarkerData
 import com.a6w.memo.common.ui.KakaoMapView
+import com.a6w.memo.common.util.DatetimeUtil
 import com.a6w.memo.domain.model.Label
 import com.a6w.memo.domain.model.Location
 import com.a6w.memo.domain.model.Mapmo
@@ -108,7 +109,6 @@ fun MapmoScreen(
     val currentLabelID = uiState.currentLabelID
     val labelName = uiState.labelName
     val labelColor = uiState.labelColor
-    val location = uiState.location
     val mapCameraFocus = uiState.mapCameraFocus
     val mapMarkerList = uiState.mapMarkerList
 
@@ -134,7 +134,6 @@ fun MapmoScreen(
                 currentLabelID = currentLabelID ?: "",
                 labelName = labelName ?: "",
                 labelColor = labelColor ?: "",
-                location = location,
                 labelList = labelList,
                 isEditing = isEditing,
                 isLabelSelectorOpen = isLabelSelectorOpen,
@@ -278,7 +277,6 @@ private fun MapmoContent(
     currentLabelID: String,
     labelName: String,
     labelColor: String,
-    location: Location?,
     labelList: List<Label>,
     isEditing: Boolean,
     isLabelSelectorOpen: Boolean,
@@ -301,7 +299,6 @@ private fun MapmoContent(
                     currentLabelID = currentLabelID,
                     labelName = labelName,
                     labelColor = labelColor,
-                    location = location,
                     labelList = labelList,
                     isEditing = isEditing,
                     isLabelSelectorOpen = isLabelSelectorOpen,
@@ -347,7 +344,6 @@ private fun ContentSection(
     currentLabelID: String,
     labelName: String,
     labelColor: String,
-    location: Location?,
     labelList: List<Label>,
     isEditing: Boolean,
     isLabelSelectorOpen: Boolean,
@@ -459,10 +455,10 @@ private fun ContentCard(
 @Composable
 private fun UpdatedAtText(updatedAt: Long) {
     val formattedDate = remember(updatedAt) {
-        Instant.ofEpochSecond(updatedAt)
-            .atZone(ZoneId.systemDefault())
-            .format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH:mm", Locale.KOREAN))
+        DatetimeUtil.getUiDateStringFromMillis(updatedAt * 1000)
+
     }
+
     Text(
         text = formattedDate,
         fontSize = META_FONT_SIZE_SP,
