@@ -28,7 +28,7 @@ class MapmoViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val mapmoRepository: MapmoRepository,
     private val labelRepository: LabelRepository,
-): ViewModel() {
+) : ViewModel() {
 
     companion object {
         // TODO: User ID must be managed with User Info
@@ -38,18 +38,24 @@ class MapmoViewModel @Inject constructor(
     private val route = savedStateHandle.toRoute<MapmoNavRoute.Mapmo>()
     private val mapmoID: String = route.mapmoID ?: ""
 
+    // Domain state for the current Mapmo and Label
+    private var currentMapmo: Mapmo? = null
+    private var currentLabel: Label? = null
+    var isEditing: Boolean = false
     private val _uiState = MutableStateFlow(MapmoUiState())
     val uiState: StateFlow<MapmoUiState> = _uiState.asStateFlow()
 
+    // Temporary content used during edit mode
     private val _editingContent = MutableStateFlow("")
     val editingContent: StateFlow<String> = _editingContent.asStateFlow()
 
+    // Cached label list
     private val _labelList = MutableStateFlow<List<Label>>(emptyList())
     val labelList: StateFlow<List<Label>> = _labelList.asStateFlow()
 
     /**
-     * Fetch Mapmo data and associated label for the current [mapmoID].
-     * On success, also prepares map camera focus and marker data.
+     * Loads the Mapmo and its associated Label.
+     * Also prepares map camera focus and marker data based on the label location.
      */
     fun loadMapmo() {
         viewModelScope.launch {
@@ -60,45 +66,77 @@ class MapmoViewModel @Inject constructor(
                 )
             }
 
-            val result = mapmoRepository.getMapmo(
+            val mapmo = mapmoRepository.getMapmo(
                 mapmoID = mapmoID,
                 userID = TEST_USER_ID,
             )
+            currentMapmo = mapmo
 
-            // Mapmo is unavailable
-            if (result == null) {
+            // Mapmo not found
+            if (currentMapmo == null) {
                 _uiState.value = MapmoUiState(
                     isLoading = false,
                     errorMessage = "Mapmo를 찾을 수 없습니다",
                 )
                 return@launch
             }
-
-            val label = runCatching {
-                labelRepository.getLabel(
-                    labelID = result.labelID ?: "",
-                    userID = TEST_USER_ID,
-                )
-            }.getOrNull()
-
-            // Label is unavailable
-            if (label == null) {
+            val mapmoContent = currentMapmo?.content
+            if(mapmoContent == null){
                 _uiState.value = MapmoUiState(
                     isLoading = false,
-                    errorMessage = "label을 찾을 수 없습니다",
+                    errorMessage = "mapmo 내용을 찾을 수 없습니다",
                 )
                 return@launch
             }
-            val labelLat = label.location.lat
-            val labelLng = label.location.lng
-            val mapmoContent = result.content
+            _editingContent.value = mapmoContent
+            val label = runCatching {
+                labelRepository.getLabel(
+                    labelID = currentMapmo?.labelID ?: "",
+                    userID = TEST_USER_ID,
+                )
+            }.getOrNull()
+            currentLabel = label
+            if (currentLabel == null) {
+                _uiState.value = MapmoUiState(
+                    isLoading = false,
+                    errorMessage = "label정보를 찾을 수 없습니다",
+                )
+                return@launch
+            }
 
-            val cameraFocus = createCameraFocus(labelLat, labelLng)
-            val markers = createMarkers(labelLat, labelLng, mapmoContent)
+            val labelLat = currentLabel?.location?.lat
+            val labelLng = currentLabel?.location?.lng
+            val markerTitle = currentMapmo?.content
 
+            if(labelLat == null || labelLng == null){
+                _uiState.value = MapmoUiState(
+                    isLoading = false,
+                    errorMessage = "Mapmo의 위치 정보를 찾을 수 없습니다",
+                )
+                return@launch
+            }
+            if(markerTitle == null){
+                _uiState.value = MapmoUiState(
+                    isLoading = false,
+                    errorMessage = "Mapmo의 내용을 찾을 수 없습니다",
+                )
+                return@launch
+            }
+            val cameraFocus = createCameraFocus(lat = labelLat, lng = labelLng)
+            val markers = createMarkers(lat = labelLat, lng = labelLng, markerTitle = markerTitle)
+            val content = currentMapmo?.content ?: ""
+            val updatedAt = currentMapmo?.updatedAt ?: 0
+            val isNotifyEnabled = currentMapmo?.isNotifyEnabled ?: false
+            val labelName = currentLabel?.name ?: ""
+            val labelColor = currentLabel?.color ?: ""
+            val labelID = currentLabel?.id ?: ""
             _uiState.value = MapmoUiState(
-                mapmo = result,
-                label = label,
+                content = content,
+                updatedAt = updatedAt,
+                isNotifyEnabled = isNotifyEnabled,
+                currentLabelID = labelID,
+                labelName = labelName,
+                labelColor = labelColor,
                 isLoading = false,
                 errorMessage = null,
                 mapCameraFocus = cameraFocus,
@@ -109,18 +147,12 @@ class MapmoViewModel @Inject constructor(
 
     /**
      * Toggle between view and edit mode.
-     * Copies current content into the editing buffer when entering edit mode.
      */
     fun toggleEditMode() {
-        val enteringEditMode = !_uiState.value.isEditing
-        val content = _uiState.value.mapmo?.content.orEmpty()
         _uiState.update {
             it.copy(
-                isEditing = enteringEditMode,
+                isEditing = !isEditing,
             )
-        }
-        if (enteringEditMode) {
-            _editingContent.value = content
         }
     }
 
@@ -139,34 +171,48 @@ class MapmoViewModel @Inject constructor(
      */
     fun saveContent() {
         viewModelScope.launch {
-            val currentMapmo = _uiState.value.mapmo ?: return@launch
 
-            val updatedMapmo = currentMapmo.copy(
-                content = _editingContent.value,
+            if(currentMapmo == null) return@launch
+            val labelName = currentLabel?.name
+            val labelID = currentLabel?.id
+            val labelColor = currentLabel?.color
+            val location = currentLabel?.location
+            val mapmoContent =  _editingContent.value
+            val updatedAt = System.currentTimeMillis()
+            val isNotify = currentMapmo?.isNotifyEnabled ?: return@launch
+
+            val updatedMapmo = currentMapmo!!.copy(
+                content = mapmoContent,
+                labelID = labelID,
+                updatedAt = updatedAt,
+                isNotifyEnabled = isNotify,
             )
-
-            // Optimistic update: reflect changes in UI before server confirms
-            _uiState.update {
-                it.copy(
-                    mapmo = updatedMapmo,
-                    isEditing = false,
-                )
-            }
-
             val success = mapmoRepository.updateMapmo(
                 mapmoContent = updatedMapmo,
                 userID = TEST_USER_ID,
             )
 
-            if (!success) {
-                // Rollback to previous state on failure
+            if (success) {
+                // Optimistic update: reflect changes in UI after server confirms
                 _uiState.update {
                     it.copy(
-                        mapmo = currentMapmo,
-                        errorMessage = "내용 저장 실패",
+                        content = mapmoContent,
+                        updatedAt = updatedAt,
+                        isNotifyEnabled = isNotify,
+                        labelName = labelName,
+                        labelColor = labelColor,
+                        isEditing = false,
+                        currentLabelID = labelID,
                     )
                 }
-                _editingContent.value = currentMapmo.content
+            }else{
+                _uiState.update {
+                    it.copy(
+                        errorMessage = "Mapmo 업데이트 실패하였습니다.",
+                    )
+                }
+                // Rollback to previous state on failure
+                _editingContent.value = currentMapmo?.content ?: return@launch
             }
         }
     }
@@ -177,18 +223,15 @@ class MapmoViewModel @Inject constructor(
      */
     fun toggleNotification() {
         viewModelScope.launch {
-            val currentMapmo = _uiState.value.mapmo ?: return@launch
+            if(currentMapmo == null) return@launch
+            val currentNotification = currentMapmo?.isNotifyEnabled ?: return@launch
 
-            val updatedMapmo = currentMapmo.copy(
-                isNotifyEnabled = !currentMapmo.isNotifyEnabled,
+            val updatedMapmo = currentMapmo?.copy(
+                isNotifyEnabled = !currentNotification
             )
 
-            // Optimistic update
-            _uiState.update {
-                it.copy(
-                    mapmo = updatedMapmo,
-                )
-            }
+            if(updatedMapmo == null) return@launch
+
             val success = mapmoRepository.updateMapmo(
                 mapmoContent = updatedMapmo,
                 userID = TEST_USER_ID,
@@ -198,13 +241,14 @@ class MapmoViewModel @Inject constructor(
                 // Rollback to previous notification state on failure
                 _uiState.update {
                     it.copy(
-                        mapmo = currentMapmo,
+                        isNotifyEnabled = currentNotification,
                         errorMessage = "알림 상태 업데이트 실패",
                     )
                 }
             } else {
                 _uiState.update {
                     it.copy(
+                        isNotifyEnabled = !currentNotification,
                         errorMessage = null,
                     )
                 }
@@ -240,7 +284,6 @@ class MapmoViewModel @Inject constructor(
                 }
                 return@launch
             }
-
             _labelList.value = result.list
             _uiState.update {
                 it.copy(
@@ -257,10 +300,35 @@ class MapmoViewModel @Inject constructor(
      * @param label The [Label] selected by the user.
      */
     fun selectLabel(label: Label) {
+
+        val labelName = label.name
+        val labelColor = label.color
+        val labelID = label.id
+        val labelLat = label.location.lat
+        val labelLng = label.location.lng
+        val markerTitle = currentMapmo?.content
+
+        // check markerTitle available
+        if(markerTitle == null){
+            _uiState.value = MapmoUiState(
+                isLoading = false,
+                errorMessage = "label의 내용을 찾을 수 없습니다",
+            )
+            return
+        }
+
+        val cameraFocus = createCameraFocus(lat = labelLat, lng = labelLng)
+        val markers = createMarkers(lat = labelLat, lng = labelLng, markerTitle = markerTitle)
+
+        currentLabel = label
         _uiState.update {
             it.copy(
-                label = label,
+                labelName = labelName,
+                labelColor = labelColor,
+                currentLabelID = labelID,
                 isLabelListLoading = false,
+                mapCameraFocus = cameraFocus,
+                mapMarkerList = markers
             )
         }
     }
