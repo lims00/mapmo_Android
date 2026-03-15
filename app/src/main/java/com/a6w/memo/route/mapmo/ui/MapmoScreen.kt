@@ -55,6 +55,7 @@ import com.a6w.memo.common.model.MapCameraFocusData
 import com.a6w.memo.common.model.MapMarkerData
 import com.a6w.memo.common.ui.KakaoMapView
 import com.a6w.memo.domain.model.Label
+import com.a6w.memo.domain.model.Location
 import com.a6w.memo.domain.model.Mapmo
 import com.a6w.memo.route.mapmo.viewmodel.MapmoViewModel
 import java.time.Instant
@@ -101,8 +102,13 @@ fun MapmoScreen(
         viewModel.loadMapmo()
     }
 
-    val mapmo = uiState.mapmo
-    val label =  uiState.label
+    val content = uiState.content
+    val updatedAt = uiState.updatedAt
+    val isNotifyEnabled = uiState.isNotifyEnabled
+    val currentLabelID = uiState.currentLabelID
+    val labelName = uiState.labelName
+    val labelColor = uiState.labelColor
+    val location = uiState.location
     val mapCameraFocus = uiState.mapCameraFocus
     val mapMarkerList = uiState.mapMarkerList
 
@@ -120,10 +126,15 @@ fun MapmoScreen(
         when {
             uiState.isLoading -> LoadingContent()
             uiState.errorMessage != null -> ErrorContent(message = uiState.errorMessage!!)
-            mapmo != null -> MapmoContent(
+            else -> MapmoContent(
                 modifier = Modifier.weight(1f),
-                mapmo = mapmo,
-                label = label,
+                content = content,
+                isNotifyEnabled = isNotifyEnabled,
+                updatedAt = updatedAt,
+                currentLabelID = currentLabelID ?: "",
+                labelName = labelName ?: "",
+                labelColor = labelColor ?: "",
+                location = location,
                 labelList = labelList,
                 isEditing = isEditing,
                 isLabelSelectorOpen = isLabelSelectorOpen,
@@ -261,8 +272,13 @@ private fun ErrorContent(
 @Composable
 private fun MapmoContent(
     modifier: Modifier = Modifier,
-    mapmo: Mapmo,
-    label: Label?,
+    content: String?,
+    updatedAt: Long,
+    isNotifyEnabled: Boolean,
+    currentLabelID: String,
+    labelName: String,
+    labelColor: String,
+    location: Location?,
     labelList: List<Label>,
     isEditing: Boolean,
     isLabelSelectorOpen: Boolean,
@@ -279,8 +295,13 @@ private fun MapmoContent(
         LazyColumn(modifier = Modifier.weight(1f)) {
             item {
                 ContentSection(
-                    mapmo = mapmo,
-                    label = label,
+                    content = content,
+                    isNotifyEnabled = isNotifyEnabled,
+                    updatedAt = updatedAt,
+                    currentLabelID = currentLabelID,
+                    labelName = labelName,
+                    labelColor = labelColor,
+                    location = location,
                     labelList = labelList,
                     isEditing = isEditing,
                     isLabelSelectorOpen = isLabelSelectorOpen,
@@ -320,8 +341,13 @@ private fun MapmoContent(
  */
 @Composable
 private fun ContentSection(
-    mapmo: Mapmo,
-    label: Label?,
+    content: String?,
+    updatedAt: Long,
+    isNotifyEnabled: Boolean,
+    currentLabelID: String,
+    labelName: String,
+    labelColor: String,
+    location: Location?,
     labelList: List<Label>,
     isEditing: Boolean,
     isLabelSelectorOpen: Boolean,
@@ -338,17 +364,17 @@ private fun ContentSection(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        label?.let {
-            LabelChip(
-                label = it,
-                onClick = if (isEditing) onLabelChipClick else null,
-            )
-        }
+        LabelChip(
+            labelName = labelName,
+            labelColor = labelColor,
+            onClick = if (isEditing) onLabelChipClick else null,
+        )
+
         if (isEditing && isLabelSelectorOpen) {
             LabelSelector(
                 labelList = labelList,
                 isLoading = isLabelListLoading,
-                currentLabel = label,
+                currentLabelID = currentLabelID,
                 onLabelSelect = onLabelSelect,
             )
         }
@@ -357,15 +383,15 @@ private fun ContentSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            UpdatedAtText(updatedAt = mapmo.updatedAt)
+            UpdatedAtText(updatedAt = updatedAt)
             NotificationRow(
-                isEnabled = mapmo.isNotifyEnabled,
+                isEnabled = isNotifyEnabled,
                 onToggle = onNotificationToggle,
             )
         }
         ContentCard(
             isEditing = isEditing,
-            content = if (isEditing) editingContent else mapmo.content,
+            content = if (isEditing) editingContent else content ?: "",
             onContentChange = onContentChange,
         )
     }
@@ -483,15 +509,15 @@ private fun NotificationRow(
  */
 @Composable
 private fun LabelChip(
-    label: Label,
+    labelName: String,
+    labelColor: String,
     isSelected: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
-    val color = remember(label.color) {
-        runCatching { Color(label.color.toColorInt()) }
+    val color = remember(labelColor) {
+        runCatching { Color(labelColor.toColorInt()) }
             .getOrDefault(Color.Gray)
     }
-
     Row(
         modifier = Modifier
             .wrapContentWidth()
@@ -518,7 +544,7 @@ private fun LabelChip(
                 .background(color),
         )
         Text(
-            text = label.name,
+            text = labelName,
             fontSize = 13.sp,
             color = color,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
@@ -540,7 +566,7 @@ private fun LabelChip(
 private fun LabelSelector(
     labelList: List<Label>,
     isLoading: Boolean,
-    currentLabel: Label?,
+    currentLabelID: String?,
     onLabelSelect: (Label) -> Unit,
 ) {
     when {
@@ -554,6 +580,7 @@ private fun LabelSelector(
                 CircularProgressIndicator(modifier = Modifier.size(20.dp))
             }
         }
+
         labelList.isEmpty() -> {
             Text(
                 text = "라벨이 없습니다",
@@ -562,6 +589,7 @@ private fun LabelSelector(
                 fontSize = META_FONT_SIZE_SP,
             )
         }
+
         else -> {
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -573,8 +601,9 @@ private fun LabelSelector(
                     key = { it.id },
                 ) { label ->
                     LabelChip(
-                        label = label,
-                        isSelected = label.id == currentLabel?.id,
+                        labelName = label.name,
+                        labelColor = label.color,
+                        isSelected = label.id == currentLabelID,
                         onClick = { onLabelSelect(label) },
                     )
                 }
