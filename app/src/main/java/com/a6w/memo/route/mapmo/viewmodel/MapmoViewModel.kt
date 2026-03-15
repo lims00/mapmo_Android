@@ -135,7 +135,6 @@ class MapmoViewModel @Inject constructor(
                 currentLabelID = labelID,
                 labelName = labelName,
                 labelColor = labelColor,
-                location = null,
                 isLoading = false,
                 errorMessage = null,
                 mapCameraFocus = cameraFocus,
@@ -200,7 +199,6 @@ class MapmoViewModel @Inject constructor(
                         isNotifyEnabled = isNotify,
                         labelName = labelName,
                         labelColor = labelColor,
-                        location = location,
                         isEditing = false,
                         currentLabelID = labelID,
                     )
@@ -307,15 +305,36 @@ class MapmoViewModel @Inject constructor(
         currentLabel = label
         val labelName = currentLabel?.name
         val labelColor = currentLabel?.color
-        val location = currentLabel?.location
         val labelID = currentLabel?.id
+        val labelLat = currentLabel?.location?.lat
+        val labelLng = currentLabel?.location?.lng
+        val markerTitle = currentMapmo?.content
+
+        if(labelLat == null || labelLng == null){
+            _uiState.value = MapmoUiState(
+                isLoading = false,
+                errorMessage = "label의 위치 정보를 찾을 수 없습니다",
+            )
+            return
+        }
+        if(markerTitle == null){
+            _uiState.value = MapmoUiState(
+                isLoading = false,
+                errorMessage = "label의 내용을 찾을 수 없습니다",
+            )
+            return
+        }
+        val cameraFocus = createCameraFocus(lat = labelLat, lng = labelLng)
+        val markers = createMarkers(lat = labelLat, lng = labelLng, markerTitle = markerTitle)
+
         _uiState.update {
             it.copy(
                 labelName = labelName,
                 labelColor = labelColor,
                 currentLabelID = labelID,
-                location = location,
                 isLabelListLoading = false,
+                mapCameraFocus = cameraFocus,
+                mapMarkerList = markers
             )
         }
     }
