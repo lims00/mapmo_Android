@@ -18,15 +18,10 @@ class MapmoNotificationWorker(
     private val mapmoRepository: MapmoRepository,
     private val notificationService: MapmoNotificationService
 ) : CoroutineWorker(context, params) {
-    companion object {
-        const val KEY_WORKER_INPUT_MEMO_ID = "MEMO_ID"
-        const val KEY_WORKER_INPUT_USER_ID = "USER_ID"
-    }
-
     override suspend fun doWork(): Result {
         // Get Mapmo ID / User ID Data
-        val mapmoID = inputData.getString(KEY_WORKER_INPUT_MEMO_ID) ?: return Result.failure()
-        val userID = inputData.getString(KEY_WORKER_INPUT_USER_ID) ?: return Result.failure()
+        val mapmoID = inputData.getString(WorkerDefs.KEY_WORKER_INPUT_MEMO_ID) ?: return Result.failure()
+        val userID = inputData.getString(WorkerDefs.KEY_WORKER_INPUT_USER_ID) ?: return Result.failure()
 
         // Get target mapmo, label instance
         val targetMapmo = mapmoRepository.getMapmo(mapmoID, userID) ?: return Result.failure()

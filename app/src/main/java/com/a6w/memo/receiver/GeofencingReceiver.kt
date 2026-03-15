@@ -10,6 +10,7 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.a6w.memo.common.util.FirebaseLogUtil
 import com.a6w.memo.data.worker.MapmoNotificationWorker
+import com.a6w.memo.data.worker.WorkerDefs
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingEvent
@@ -63,8 +64,8 @@ class GeofencingReceiver: BroadcastReceiver() {
         val workRequest = OneTimeWorkRequestBuilder<MapmoNotificationWorker>()
             .setInputData(
                 workDataOf(
-                    MapmoNotificationWorker.KEY_WORKER_INPUT_MEMO_ID to mapmoID,
-                    MapmoNotificationWorker.KEY_WORKER_INPUT_USER_ID to TEST_USER_ID,
+                    WorkerDefs.KEY_WORKER_INPUT_MEMO_ID to mapmoID,
+                    WorkerDefs.KEY_WORKER_INPUT_USER_ID to TEST_USER_ID,
                 )
             )
             // Network connection is required
