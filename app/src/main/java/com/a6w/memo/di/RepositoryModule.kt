@@ -1,9 +1,11 @@
 package com.a6w.memo.di
 
+import com.a6w.memo.data.repository.AddressSearchRepositoryImpl
 import com.a6w.memo.data.repository.GeofenceRepositoryImpl
 import com.a6w.memo.data.repository.LabelRepositoryImpl
 import com.a6w.memo.data.repository.MapmoListRepositoryImpl
 import com.a6w.memo.data.repository.MapmoRepositoryImpl
+import com.a6w.memo.domain.repository.AddressSearchRepository
 import com.a6w.memo.domain.repository.GeofenceRepository
 import com.a6w.memo.domain.repository.LabelRepository
 import com.a6w.memo.domain.repository.MapmoListRepository
@@ -40,4 +42,10 @@ abstract class RepositoryModule {
     abstract fun bindMapmoListRepository(
         impl: MapmoListRepositoryImpl
     ): MapmoListRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAddressSearchRepository(
+        impl: AddressSearchRepositoryImpl
+    ): AddressSearchRepository
 }
