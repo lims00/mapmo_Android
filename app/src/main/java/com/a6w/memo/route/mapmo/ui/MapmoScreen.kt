@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,16 +32,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,6 +62,7 @@ import com.a6w.memo.common.model.MapMarkerData
 import com.a6w.memo.common.ui.KakaoMapView
 import com.a6w.memo.common.util.DatetimeUtil
 import com.a6w.memo.domain.model.Label
+import com.a6w.memo.route.label.ui.LabelEditBottomSheetContent
 import com.a6w.memo.route.mapmo.viewmodel.MapmoViewModel
 
 // ——— Constants ———————————————————————————————————————————
@@ -91,6 +98,8 @@ fun MapmoScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val editingContent by viewModel.editingContent.collectAsStateWithLifecycle()
     val labelList by viewModel.labelList.collectAsStateWithLifecycle()
+    var isLabelAddSheetOpen by rememberSaveable { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Triggers data load once when the screen enters composition.
     LaunchedEffect(Unit) {
@@ -139,6 +148,22 @@ fun MapmoScreen(
                 onNotificationToggle = { viewModel.toggleNotification() },
                 onLabelChipClick = { viewModel.loadLabelList() },
                 onLabelSelect = { viewModel.selectLabel(it) },
+                onAddLabelClick = { isLabelAddSheetOpen = true },
+                )
+        }
+    }
+    // Label add bottom sheet — rendered outside Column to overlay the full screen
+    if (isLabelAddSheetOpen) {
+        ModalBottomSheet(
+            onDismissRequest = { isLabelAddSheetOpen = false },
+            sheetState = sheetState,
+        ) {
+            LabelEditBottomSheetContent(
+                onDismiss = {
+                    isLabelAddSheetOpen = false
+                    // Reload label list to reflect newly added label
+                    viewModel.loadLabelList()
+                },
             )
         }
     }
@@ -284,6 +309,7 @@ private fun MapmoContent(
     onNotificationToggle: () -> Unit,
     onLabelChipClick: () -> Unit,
     onLabelSelect: (Label) -> Unit,
+    onAddLabelClick: () -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         LazyColumn(modifier = Modifier.weight(1f)) {
@@ -304,6 +330,7 @@ private fun MapmoContent(
                     onNotificationToggle = onNotificationToggle,
                     onLabelChipClick = onLabelChipClick,
                     onLabelSelect = onLabelSelect,
+                    onAddLabelClick = onAddLabelClick,
                 )
             }
         }
@@ -353,6 +380,7 @@ private fun ContentSection(
     onNotificationToggle: () -> Unit,
     onLabelChipClick: () -> Unit,
     onLabelSelect: (Label) -> Unit,
+    onAddLabelClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -372,6 +400,7 @@ private fun ContentSection(
                 isLoading = isLabelListLoading,
                 currentLabelID = currentLabelID,
                 onLabelSelect = onLabelSelect,
+                onAddLabelClick = onAddLabelClick,
             )
         }
         Row(
@@ -570,6 +599,7 @@ private fun LabelSelector(
     isLoading: Boolean,
     currentLabelID: String?,
     onLabelSelect: (Label) -> Unit,
+    onAddLabelClick: () -> Unit,
 ) {
     when {
         isLoading -> {
@@ -609,8 +639,50 @@ private fun LabelSelector(
                         onClick = { onLabelSelect(label) },
                     )
                 }
+                // Add button at the end of the label list — same pill shape as chips
+                item {
+                    AddLabelButton(onClick = onAddLabelClick)
+                }
             }
         }
+    }
+}
+
+/**
+ * Pill-shaped add button appended to the end of the label selector.
+ * Visually consistent with [LabelChip] using the same shape and padding.
+ *
+ * @param onClick Callback invoked when the button is tapped.
+ */
+@Composable
+private fun AddLabelButton(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .wrapContentWidth()
+            .clip(RoundedCornerShape(50))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(50),
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = "Add label",
+            modifier = Modifier.size(14.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = "추가",
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium,
+        )
     }
 }
 
