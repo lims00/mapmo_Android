@@ -44,18 +44,6 @@ class MapmoRepositoryImpl: MapmoRepository {
                     .await()
             // Check if the document exists
             if (document.exists().not()) return null
-            // Extract GeoPoint from Firestore
-            val geoPoint = document.getGeoPoint(FirestoreKey.DOCUMENT_KEY_LOCATION) ?: return null
-
-            // Location Lat/Lng Info
-            val mapmoLat = geoPoint.latitude
-            val mapmoLng = geoPoint.longitude
-
-            // Location Data
-            val location = Location(
-                lat = mapmoLat,
-                lng = mapmoLng,
-            )
 
             val mapmoID = document.id
             val content = document.getString(FirestoreKey.DOCUMENT_KEY_CONTENT) ?: ""
@@ -72,7 +60,6 @@ class MapmoRepositoryImpl: MapmoRepository {
                 content = content,
                 isNotifyEnabled = isNotifyEnabled,
                 labelID = labelID,
-                location = location,
                 updatedAt = updatedAt,
             )
 
@@ -92,16 +79,13 @@ class MapmoRepositoryImpl: MapmoRepository {
         userID: String,
     ): Boolean {
         try {
-            // Convert Location to Firestore GeoPoint
-            val location = GeoPoint(mapmoContent.location.lat, mapmoContent.location.lng)
-            val updatedAt = Timestamp.now()
+             val updatedAt = Timestamp.now()
 
             // Create map data to upload to Firestore
             val mapmoData = hashMapOf(
                 FirestoreKey.DOCUMENT_KEY_CONTENT to mapmoContent.content,
                 FirestoreKey.DOCUMENT_KEY_IS_NOTIFY_ENABLED to mapmoContent.isNotifyEnabled,
                 FirestoreKey.DOCUMENT_KEY_LABEL_ID to mapmoContent.labelID,
-                FirestoreKey.DOCUMENT_KEY_LOCATION to location,
                 FirestoreKey.DOCUMENT_KEY_UPDATED_AT to updatedAt,
                 FirestoreKey.DOCUMENT_KEY_USER_ID to userID,
             )
@@ -130,8 +114,6 @@ class MapmoRepositoryImpl: MapmoRepository {
         userID: String,
     ): Boolean {
         try {
-            // Convert Location to Firestore GeoPoint
-            val location = GeoPoint(mapmoContent.location.lat, mapmoContent.location.lng)
             // Set current timestamp for update
             val updatedAt = Timestamp.now()
             // Create updated data mapmo
@@ -139,7 +121,6 @@ class MapmoRepositoryImpl: MapmoRepository {
                 FirestoreKey.DOCUMENT_KEY_CONTENT to mapmoContent.content,
                 FirestoreKey.DOCUMENT_KEY_IS_NOTIFY_ENABLED to mapmoContent.isNotifyEnabled,
                 FirestoreKey.DOCUMENT_KEY_LABEL_ID to mapmoContent.labelID,
-                FirestoreKey.DOCUMENT_KEY_LOCATION to location,
                 FirestoreKey.DOCUMENT_KEY_UPDATED_AT to updatedAt,
             )
 

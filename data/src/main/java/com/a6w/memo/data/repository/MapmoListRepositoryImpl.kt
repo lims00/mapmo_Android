@@ -88,26 +88,6 @@ class MapmoListRepositoryImpl: MapmoListRepository {
                 val labelID = document.getString(FirestoreKey.DOCUMENT_KEY_LABEL_ID)
                 val updatedAt =
                     document.getTimestamp(FirestoreKey.DOCUMENT_KEY_UPDATED_AT)?.seconds ?: -1
-                var location = Location(lat = 0.0, lng = 0.0)
-
-                // Determine location
-                 if (labelID != null) {
-                    // Use location from the matched label if labelID exists
-                    val label = labels.find { it.id == labelID }
-                     location = label?.location ?: Location(lat = 0.0, lng = 0.0)
-                } else {
-                    // Use Mapmo's own location if labelID is null
-                    val geoPoint = document.getGeoPoint(FirestoreKey.DOCUMENT_KEY_LOCATION)
-                    if (geoPoint != null) {
-                        location = Location(
-                            lat = geoPoint.latitude,
-                            lng = geoPoint.longitude,
-                        )
-                    } else {
-                        // Skip if location data is missing
-                        return@mapNotNull null
-                    }
-                }
 
                 // Mapmo Data
                 Mapmo(
@@ -115,7 +95,6 @@ class MapmoListRepositoryImpl: MapmoListRepository {
                     content = content,
                     isNotifyEnabled = isNotifyEnabled,
                     labelID = labelID,
-                    location = location,
                     updatedAt = updatedAt,
                 )
             }

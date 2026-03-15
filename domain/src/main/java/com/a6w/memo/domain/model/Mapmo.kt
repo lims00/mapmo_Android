@@ -16,8 +16,6 @@ data class Mapmo(
     val isNotifyEnabled: Boolean,
     // Label name of the Mapmo
     val labelID: String? = null,
-    // Location of Mapmo
-    val location: Location,
     // Last modified date and time
     val updatedAt: Long,
 ) {
