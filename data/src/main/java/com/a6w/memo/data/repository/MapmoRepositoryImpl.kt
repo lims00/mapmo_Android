@@ -11,6 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import kotlin.collections.set
 
 /**
  * MapmoRepositoryImpl
@@ -144,4 +145,32 @@ class MapmoRepositoryImpl @Inject constructor(): MapmoRepository {
         }
     }
 
+    override suspend fun deleteMapmo(
+        mapmoID: String,
+        userID: String,
+    ): Boolean {
+        // Retrieve the mapmo document to validate ownership
+        val document = mapmoCollection
+            .document(mapmoID)
+            .get()
+            .await()
+
+        // Ensure that only the owner can delete the mapmo
+        if (document.getString(FirestoreKey.DOCUMENT_KEY_USER_ID) != userID) {
+            return false
+        }
+
+        // Delete the mapmo document
+        mapmoCollection
+            .document(mapmoID)
+            .delete()
+            .await()
+
+        // Remove from mapmo cache
+        mapmoCache.remove(mapmoID)
+
+        // Remove cached MapmoList Data
+        mapmoListRepositoryImpl.removeCachedMapmoList(userID)
+        return true
+    }
 }
