@@ -13,4 +13,6 @@ interface MapmoRepository {
     suspend fun updateMapmo(mapmoContent: Mapmo, userID: String): Boolean
     // Retrieve Mapmo detailed information
     suspend fun getMapmo(mapmoID: String, userID: String): Mapmo?
+    // Delete Mapmo by id
+    suspend fun deleteMapmo(mapmoID: String, userID: String): Boolean
 }
