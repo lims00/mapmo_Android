@@ -37,47 +37,10 @@ class HomeViewModel @Inject constructor(
     // Mapmo List
     private var mapmoList: MapmoList? = null
 
-    init {
-        fetchInitialUiState()
-    }
-
     /**
-     * Move camera focus to Label
+     * Load mapmo from repository, and update as state
      */
-    fun moveMapCameraToLabel(labelID: String) {
-        viewModelScope.launch {
-            // Get target label
-            val targetLabel = mapmoList?.list?.firstOrNull { item ->
-                item.labelItem?.id == labelID
-            }?.labelItem
-
-            if(targetLabel == null) return@launch
-
-            // Get label location info
-            val labelLocation = targetLabel.location
-            val labelLat = labelLocation.lat.toFloat()
-            val labelLng = labelLocation.lng.toFloat()
-
-            // Generate camera focus data
-            val cameraFocusData = MapCameraFocusData(
-                latitude = labelLat,
-                longitude = labelLng,
-            )
-
-            // Update as UI State
-            _uiState.update {
-                it.copy(
-                    mapCameraFocus = cameraFocusData,
-                )
-            }
-        }
-
-    }
-
-    /**
-     * Generate init state
-     */
-    private fun fetchInitialUiState() {
+    fun loadMapmo() {
         viewModelScope.launch {
             // Initialize mapmo list state
             mapmoList = getMapmoList()
@@ -119,6 +82,39 @@ class HomeViewModel @Inject constructor(
                     moveMapCameraToLabel(labelID)
                 }
         }
+    }
+
+    /**
+     * Move camera focus to Label
+     */
+    fun moveMapCameraToLabel(labelID: String) {
+        viewModelScope.launch {
+            // Get target label
+            val targetLabel = mapmoList?.list?.firstOrNull { item ->
+                item.labelItem?.id == labelID
+            }?.labelItem
+
+            if(targetLabel == null) return@launch
+
+            // Get label location info
+            val labelLocation = targetLabel.location
+            val labelLat = labelLocation.lat.toFloat()
+            val labelLng = labelLocation.lng.toFloat()
+
+            // Generate camera focus data
+            val cameraFocusData = MapCameraFocusData(
+                latitude = labelLat,
+                longitude = labelLng,
+            )
+
+            // Update as UI State
+            _uiState.update {
+                it.copy(
+                    mapCameraFocus = cameraFocusData,
+                )
+            }
+        }
+
     }
 
     /**
