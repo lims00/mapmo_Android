@@ -196,7 +196,7 @@ private fun MapmoTopBar(
                 TextButton(onClick = onSaveClick) {
                     Text("저장", fontWeight = FontWeight.Bold)
                 }
-            } else if (!isAddMode) { // 추가 모드엔 편집 아이콘 없음
+            } else if (!isAddMode) { // hide edit icon in creation mode
                 IconButton(onClick = onEditClick) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
