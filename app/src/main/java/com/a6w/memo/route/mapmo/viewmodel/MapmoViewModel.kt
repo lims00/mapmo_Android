@@ -30,7 +30,7 @@ class MapmoViewModel @Inject constructor(
     private val mapmoRepository: MapmoRepository,
     private val labelRepository: LabelRepository,
     private val geofenceRepository: GeofenceRepository,
-) : ViewModel() {
+): ViewModel() {
 
     companion object {
         // TODO: User ID must be managed with User Info
@@ -76,7 +76,7 @@ class MapmoViewModel @Inject constructor(
                 mapmoID = "",
                 content = "",
                 labelID = "",
-                updatedAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis() / 1000,
                 isNotifyEnabled = false,
             )
             loadLabelList()
