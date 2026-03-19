@@ -13,9 +13,11 @@ data class MapmoUiState(
     val labelColor: String? = null,
     val isLoading: Boolean = false,
     val isEditing: Boolean = false,
+    val isAddMode: Boolean = false,
     val isLabelListLoading: Boolean = false,
     val isLabelSelectorOpen: Boolean = false,
     val errorMessage: String? = null,
     val mapCameraFocus: MapCameraFocusData? = null,
     val mapMarkerList: List<MapMarkerData>? = null,
+    val navigateBack: Boolean = false,
 )
