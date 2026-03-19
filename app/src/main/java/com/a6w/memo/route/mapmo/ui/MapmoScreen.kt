@@ -109,9 +109,19 @@ fun MapmoScreen(
     val isEditing = uiState.isEditing
     val isLabelSelectorOpen = uiState.isLabelSelectorOpen
     val isLabelListLoading = uiState.isLabelListLoading
+    val isAddMode = uiState.isAddMode
+    val navigateBack = uiState.navigateBack
+
+    // Navigate back when save is completed
+    LaunchedEffect(navigateBack) {
+        if (navigateBack) {
+            navigationPop()
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         MapmoTopBar(
+            isAddMode = isAddMode,
             isEditing = isEditing,
             onBackClick = navigationPop,
             onEditClick = { viewModel.toggleEditMode() },
@@ -132,6 +142,7 @@ fun MapmoScreen(
                 isEditing = isEditing,
                 isLabelSelectorOpen = isLabelSelectorOpen,
                 isLabelListLoading = isLabelListLoading,
+                isAddMode = isAddMode,
                 editingContent = editingContent,
                 mapCameraFocus = mapCameraFocus,
                 mapMarkerList = mapMarkerList,
@@ -159,6 +170,7 @@ fun MapmoScreen(
 @Composable
 private fun MapmoTopBar(
     isEditing: Boolean,
+    isAddMode: Boolean,
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
     onSaveClick: () -> Unit,
@@ -166,7 +178,7 @@ private fun MapmoTopBar(
     TopAppBar(
         title = {
             Text(
-                text = "MAPMO",
+                text = if (isAddMode) "MAPMO 추가" else "MAPMO",
                 fontSize = TITLE_FONT_SIZE_SP,
                 fontWeight = FontWeight.Medium,
             )
@@ -184,7 +196,7 @@ private fun MapmoTopBar(
                 TextButton(onClick = onSaveClick) {
                     Text("저장", fontWeight = FontWeight.Bold)
                 }
-            } else {
+            } else if (!isAddMode) { // 추가 모드엔 편집 아이콘 없음
                 IconButton(onClick = onEditClick) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
@@ -277,6 +289,7 @@ private fun MapmoContent(
     isEditing: Boolean,
     isLabelSelectorOpen: Boolean,
     isLabelListLoading: Boolean,
+    isAddMode: Boolean,
     editingContent: String,
     mapCameraFocus: MapCameraFocusData?,
     mapMarkerList: List<MapMarkerData>?,
@@ -299,6 +312,7 @@ private fun MapmoContent(
                     isEditing = isEditing,
                     isLabelSelectorOpen = isLabelSelectorOpen,
                     isLabelListLoading = isLabelListLoading,
+                    isAddMode = isAddMode,
                     editingContent = editingContent,
                     onContentChange = onContentChange,
                     onNotificationToggle = onNotificationToggle,
@@ -348,6 +362,7 @@ private fun ContentSection(
     isEditing: Boolean,
     isLabelSelectorOpen: Boolean,
     isLabelListLoading: Boolean,
+    isAddMode: Boolean,
     editingContent: String,
     onContentChange: (String) -> Unit,
     onNotificationToggle: () -> Unit,
@@ -374,16 +389,18 @@ private fun ContentSection(
                 onLabelSelect = onLabelSelect,
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            UpdatedAtText(updatedAt = updatedAt)
-            NotificationRow(
-                isEnabled = isNotifyEnabled,
-                onToggle = onNotificationToggle,
-            )
+        if (!isAddMode) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                UpdatedAtText(updatedAt = updatedAt)
+                NotificationRow(
+                    isEnabled = isNotifyEnabled,
+                    onToggle = onNotificationToggle,
+                )
+            }
         }
         ContentCard(
             isEditing = isEditing,
