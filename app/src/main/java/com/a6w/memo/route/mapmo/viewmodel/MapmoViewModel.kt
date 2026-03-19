@@ -55,11 +55,34 @@ class MapmoViewModel @Inject constructor(
     private val _labelList = MutableStateFlow<List<Label>>(emptyList())
     val labelList: StateFlow<List<Label>> = _labelList.asStateFlow()
 
+    // Flag for Mapmo creation
+    val isAddMode: Boolean = mapmoID.isBlank()
+
     /**
      * Loads the Mapmo and its associated Label.
      * Also prepares map camera focus and marker data based on the label location.
      */
     fun loadMapmo() {
+        if (isAddMode) {
+            _uiState.update {
+                it.copy(
+                    isNotifyEnabled = false,
+                    isLoading = false,
+                    isEditing = true,
+                    isAddMode = true,
+                    updatedAt = System.currentTimeMillis() / 1000,
+                )
+            }
+            currentMapmo = Mapmo(
+                mapmoID = "",
+                content = "",
+                labelID = "",
+                updatedAt = System.currentTimeMillis(),
+                isNotifyEnabled = false,
+            )
+            loadLabelList()
+            return
+        }
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
@@ -83,7 +106,7 @@ class MapmoViewModel @Inject constructor(
                 return@launch
             }
             val mapmoContent = currentMapmo?.content
-            if(mapmoContent == null){
+            if (mapmoContent == null) {
                 _uiState.value = MapmoUiState(
                     isLoading = false,
                     errorMessage = "mapmo 내용을 찾을 수 없습니다",
@@ -110,14 +133,14 @@ class MapmoViewModel @Inject constructor(
             val labelLng = currentLabel?.location?.lng
             val markerTitle = currentMapmo?.content
 
-            if(labelLat == null || labelLng == null){
+            if (labelLat == null || labelLng == null) {
                 _uiState.value = MapmoUiState(
                     isLoading = false,
                     errorMessage = "Mapmo의 위치 정보를 찾을 수 없습니다",
                 )
                 return@launch
             }
-            if(markerTitle == null){
+            if (markerTitle == null) {
                 _uiState.value = MapmoUiState(
                     isLoading = false,
                     errorMessage = "Mapmo의 내용을 찾을 수 없습니다",
@@ -153,7 +176,7 @@ class MapmoViewModel @Inject constructor(
     fun toggleEditMode() {
         _uiState.update {
             it.copy(
-                isEditing = !isEditing,
+                isEditing = !!it.isEditing,
             )
         }
     }
@@ -173,48 +196,74 @@ class MapmoViewModel @Inject constructor(
      */
     fun saveContent() {
         viewModelScope.launch {
-
-            if(currentMapmo == null) return@launch
-            val labelName = currentLabel?.name
-            val labelID = currentLabel?.id
-            val labelColor = currentLabel?.color
-            val location = currentLabel?.location
-            val mapmoContent =  _editingContent.value
-            val updatedAt = System.currentTimeMillis()
-            val isNotify = currentMapmo?.isNotifyEnabled ?: return@launch
-
-            val updatedMapmo = currentMapmo!!.copy(
-                content = mapmoContent,
-                labelID = labelID,
-                updatedAt = updatedAt,
-                isNotifyEnabled = isNotify,
-            )
-            val success = mapmoRepository.updateMapmo(
-                mapmoContent = updatedMapmo,
-                userID = TEST_USER_ID,
-            )
-
-            if (success) {
-                // Optimistic update: reflect changes in UI after server confirms
-                _uiState.update {
-                    it.copy(
-                        content = mapmoContent,
-                        updatedAt = updatedAt,
-                        isNotifyEnabled = isNotify,
-                        labelName = labelName,
-                        labelColor = labelColor,
-                        isEditing = false,
-                        currentLabelID = labelID,
-                    )
+            if (isAddMode) {
+                val labelID = currentLabel?.id
+                if (labelID == null) {
+                    _uiState.update { it.copy(errorMessage = "라벨을 선택해주세요") }
+                    return@launch
                 }
-            }else{
-                _uiState.update {
-                    it.copy(
-                        errorMessage = "Mapmo 업데이트 실패하였습니다.",
-                    )
+                if (currentMapmo == null) {
+                    _uiState.update { it.copy(errorMessage = "맵모 저장 오류") }
+                    return@launch
                 }
-                // Rollback to previous state on failure
-                _editingContent.value = currentMapmo?.content ?: return@launch
+                val newMapmo = Mapmo(
+                    mapmoID = "",
+                    content = _editingContent.value,
+                    labelID = labelID,
+                    updatedAt = System.currentTimeMillis() / 1000,
+                    isNotifyEnabled = false,
+                )
+                val success = mapmoRepository.addMapmo(
+                    mapmoContent = newMapmo,
+                    userID = TEST_USER_ID,
+                )
+                if (success) {
+                    _uiState.update { it.copy(navigateBack = true) }
+                } else {
+                    _uiState.update { it.copy(errorMessage = "Mapmo 추가 실패") }
+                }
+            } else {
+                if (currentMapmo == null) return@launch
+                val labelName = currentLabel?.name
+                val labelID = currentLabel?.id
+                val labelColor = currentLabel?.color
+                val mapmoContent = _editingContent.value
+                val updatedAt = System.currentTimeMillis() / 1000
+                val isNotify = currentMapmo?.isNotifyEnabled ?: return@launch
+
+                val updatedMapmo = currentMapmo!!.copy(
+                    content = mapmoContent,
+                    labelID = labelID,
+                    updatedAt = updatedAt,
+                    isNotifyEnabled = isNotify,
+                )
+                val success = mapmoRepository.updateMapmo(
+                    mapmoContent = updatedMapmo,
+                    userID = TEST_USER_ID,
+                )
+
+                if (success) {
+                    // Optimistic update: reflect changes in UI after server confirms
+                    _uiState.update {
+                        it.copy(
+                            content = mapmoContent,
+                            updatedAt = updatedAt,
+                            isNotifyEnabled = isNotify,
+                            labelName = labelName,
+                            labelColor = labelColor,
+                            isEditing = false,
+                            currentLabelID = labelID,
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = "Mapmo 업데이트 실패하였습니다.",
+                        )
+                    }
+                    // Rollback to previous state on failure
+                    _editingContent.value = currentMapmo?.content ?: return@launch
+                }
             }
         }
     }
@@ -225,7 +274,7 @@ class MapmoViewModel @Inject constructor(
      */
     fun toggleNotification() {
         viewModelScope.launch {
-            if(currentMapmo == null) return@launch
+            if (currentMapmo == null) return@launch
             val currentNotification = currentMapmo?.isNotifyEnabled ?: return@launch
 
             val isNotifyEnabled = !currentNotification
@@ -233,7 +282,7 @@ class MapmoViewModel @Inject constructor(
                 isNotifyEnabled = isNotifyEnabled
             )
 
-            if(updatedMapmo == null) return@launch
+            if (updatedMapmo == null) return@launch
 
             val success = mapmoRepository.updateMapmo(
                 mapmoContent = updatedMapmo,
@@ -249,9 +298,10 @@ class MapmoViewModel @Inject constructor(
                     )
                 }
             } else {
+                currentMapmo = updatedMapmo
                 // Register to Geofencing Service
                 val mapmoID = updatedMapmo.mapmoID
-                if(isNotifyEnabled) {
+                if (isNotifyEnabled) {
                     val location = currentLabel!!.location
                     geofenceRepository.registerGeofence(mapmoID, location)
                 } else {
@@ -318,10 +368,10 @@ class MapmoViewModel @Inject constructor(
         val labelID = label.id
         val labelLat = label.location.lat
         val labelLng = label.location.lng
-        val markerTitle = currentMapmo?.content
+        val markerTitle = currentMapmo?.content ?: ""
 
         // check markerTitle available
-        if(markerTitle == null){
+        if (!isAddMode && markerTitle == "") {
             _uiState.value = MapmoUiState(
                 isLoading = false,
                 errorMessage = "label의 내용을 찾을 수 없습니다",
