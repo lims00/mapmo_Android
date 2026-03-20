@@ -280,6 +280,7 @@ class MapmoViewModel @Inject constructor(
 
             val updatedMapmo = mapmoRepository.toggleNotification(
                 mapmoID = currentMapmo!!.mapmoID,
+                userID = TEST_USER_ID,
             )
 
             if (updatedMapmo == null) {
@@ -432,6 +433,8 @@ class MapmoViewModel @Inject constructor(
 
         return listOf(
             MapMarkerData(
+                // TODO: Refactor
+                color = "#FFFFFF",
                 latitude = lat,
                 longitude = lng,
                 markerTitle = markerTitle,

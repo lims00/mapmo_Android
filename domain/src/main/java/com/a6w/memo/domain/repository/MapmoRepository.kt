@@ -16,5 +16,5 @@ interface MapmoRepository {
     // Delete Mapmo by id
     suspend fun deleteMapmo(mapmoID: String, userID: String): Boolean
     // Toggle notification state of a Mapmo (true <-> false)
-    suspend fun toggleNotification(mapmoID: String): Mapmo?
+    suspend fun toggleNotification(mapmoID: String, userID: String): Mapmo?
 }

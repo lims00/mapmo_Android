@@ -21,15 +21,14 @@ import kotlin.collections.set
  * - Maintain an in-memory cache for individual Mapmo items
  *
  */
-class MapmoRepositoryImpl @Inject constructor(): MapmoRepository {
+class MapmoRepositoryImpl @Inject constructor(
+    private val mapmoListRepositoryImpl: MapmoListRepository,
+): MapmoRepository {
     private val firestoreDB = FirebaseFirestore.getInstance()
     private val mapmoCollection by lazy { firestoreDB.collection(FirestoreKey.COLLECTION_KEY_MAPMO) }
 
     // Cache for individual Mapmo (key: mapmoID)
     private val mapmoCache = mutableMapOf<String, Mapmo>()
-
-    // Used to invalidate Mapmo list cache when data changes
-    private val mapmoListRepositoryImpl: MapmoListRepository = MapmoListRepositoryImpl()
 
     /**
      * Retrieves a single Mapmo by ID.
@@ -225,6 +224,7 @@ class MapmoRepositoryImpl @Inject constructor(): MapmoRepository {
      */
     override suspend fun toggleNotification(
         mapmoID: String,
+        userID: String,
     ): Mapmo? {
         try {
             // Fetch the latest document directly from Firestore instead of using cache,
@@ -260,6 +260,9 @@ class MapmoRepositoryImpl @Inject constructor(): MapmoRepository {
                     updatedAt = updatedAt,
                 )
             mapmoCache[mapmoID] = updatedMapmo
+
+            // Remove cached MapmoList Data
+            mapmoListRepositoryImpl.removeCachedMapmoList(userID)
             return updatedMapmo
         } catch (e: Exception) {
             e.printStackTrace()
