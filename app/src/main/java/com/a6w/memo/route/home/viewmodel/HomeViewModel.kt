@@ -143,7 +143,15 @@ class HomeViewModel @Inject constructor(
     fun toggleMapmoNotify(
         mapmoID: String,
     ) {
-        // TODO: Repository 연동
+        viewModelScope.launch {
+            // Set UI STate as Loading
+            _uiState.update { HomeUiState.Loading }
+
+            // TODO: Repository 연동
+
+            // Reload Mapmo list data
+            loadMapmoList()
+        }
     }
 
 
