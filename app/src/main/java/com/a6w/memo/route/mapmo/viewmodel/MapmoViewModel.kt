@@ -180,7 +180,7 @@ class MapmoViewModel @Inject constructor(
             val labelColor = currentLabel?.color
             val location = currentLabel?.location
             val mapmoContent =  _editingContent.value
-            val updatedAt = System.currentTimeMillis()
+            val updatedAt = System.currentTimeMillis() / 1000
             val isNotify = currentMapmo?.isNotifyEnabled ?: return@launch
 
             val updatedMapmo = currentMapmo!!.copy(
