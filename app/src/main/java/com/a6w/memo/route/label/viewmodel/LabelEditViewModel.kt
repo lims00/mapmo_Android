@@ -181,6 +181,8 @@ class LabelEditViewModel @Inject constructor(
 
         val markers = listOf(
             MapMarkerData(
+                // TODO: Refactor
+                color = "#FFFFFF",
                 latitude = latFloat,
                 longitude = lngFloat,
                 markerTitle = "",

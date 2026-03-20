@@ -432,6 +432,8 @@ class MapmoViewModel @Inject constructor(
 
         return listOf(
             MapMarkerData(
+                // TODO: Refactor
+                color = "#FFFFFF",
                 latitude = lat,
                 longitude = lng,
                 markerTitle = markerTitle,

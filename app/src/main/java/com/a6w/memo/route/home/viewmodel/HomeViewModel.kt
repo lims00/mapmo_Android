@@ -160,12 +160,14 @@ class HomeViewModel @Inject constructor(
     private fun Label.toMapMarkerData(): MapMarkerData {
         // Label Data
         val labelTitle = this.name
+        val labelColor = this.color
         val labelLocation = this.location
         val labelLocationLat = labelLocation.lat.toFloat()
         val labelLocationLng = labelLocation.lng.toFloat()
 
         // Generate Map Marker Data model
         return MapMarkerData(
+            color = labelColor,
             latitude = labelLocationLat,
             longitude = labelLocationLng,
             markerTitle = labelTitle,

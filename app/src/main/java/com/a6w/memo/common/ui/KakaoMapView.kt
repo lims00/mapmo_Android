@@ -1,6 +1,11 @@
 package com.a6w.memo.common.ui
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.util.Log
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -11,10 +16,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -36,6 +40,9 @@ import com.kakao.vectormap.label.LabelStyles
 import com.kakao.vectormap.label.LabelTextBuilder
 import com.kakao.vectormap.label.LabelTextStyle
 import java.lang.Exception
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.graphics.toColorInt
 
 private const val KAKAO_MAP_CAMERA_MOVE_DURATION_MS = 500
 
@@ -128,7 +135,7 @@ fun KakaoMapView(
         val labelManager = kakaoMap?.labelManager
         labelManager?.let {
             Log.d("KakaoMapView", "Add Label: $markers")
-            addMarkers(it, markers)
+            addMarkers(context, it, markers)
         }
     }
 
@@ -149,6 +156,7 @@ fun KakaoMapView(
  * Add markers on KakaoMap View
  */
 private fun addMarkers(
+    context: Context,
     labelManager: LabelManager?,
     markers: List<MapMarkerData>?,
 ) {
@@ -158,30 +166,24 @@ private fun addMarkers(
     // Remove all labels
     layer.removeAll()
 
-    // Marker groups by same locations
-    val groupedMarkers = markerList.groupBy {
-        LatLng.from(it.latitude.toDouble(), it.longitude.toDouble())
-    }
+    markerList.forEach { markerData ->
+        // Marker Data
+        val markerColor = markerData.color
+        val markerTitle = markerData.markerTitle
 
-    // Generate kakao map label style and cache it
-    val labelStyles = getKakaoMapLabelStyles()
+        // Marker Location Data
+        val markerLat = markerData.latitude.toDouble()
+        val markerLng = markerData.longitude.toDouble()
+        val markerLocation = LatLng.from(markerLat, markerLng)
 
-    groupedMarkers.forEach { (position, infoList) ->
-        // Marker title
-        // - If grouped size is 1, display only its title
-        // - If size is more than 1, show count beside title
-        val mainTitle = infoList.first().markerTitle
-        val displayTitle = if (infoList.size > 1) {
-            "$mainTitle +${infoList.size - 1}"
-        } else {
-            mainTitle
-        }
+        // Generate kakao map label style and cache it
+        val labelStyles = getKakaoMapLabelStyles(context, markerColor)
 
         // Generate Label data based on marker info
-        val labelText = LabelTextBuilder().setTexts(displayTitle)
+        val labelText = LabelTextBuilder().setTexts(markerTitle)
 
         // Setup Label Option
-        val labelOption = LabelOptions.from(position).apply {
+        val labelOption = LabelOptions.from(markerLocation).apply {
             setStyles(labelStyles)
             setTexts(labelText)
         }
@@ -196,8 +198,64 @@ private fun addMarkers(
  * - Apply themed icon drawable
  * - Apply text color / size
  */
-private fun getKakaoMapLabelStyles() = LabelStyles.from(
-        LabelStyle
-            .from(R.drawable.map_label)
-            .setTextStyles(LabelTextStyle.from(32, Color.Black.toArgb()))
+private fun getKakaoMapLabelStyles(
+    context: Context,
+    colorString: String,
+): LabelStyles {
+    // Create color tinted bitmap with drawable resource
+    val iconResID = R.drawable.map_label
+    val iconBitmap = createTintedMarkerBitmap(context, iconResID, colorString)
+
+    // If bitmap is available, use it.
+    // - If not, use original drawable resource directly
+    val style = if(iconBitmap != null) LabelStyle.from(iconBitmap) else LabelStyle.from(iconResID)
+
+    return LabelStyles.from(
+        style.setTextStyles(LabelTextStyle.from(32, Color.BLACK))
     )
+}
+
+/**
+ * Create marker bitmap from drawable resource with color tinted
+ * - Cache generated bitmap as [bitmapCache]
+ */
+private val bitmapCache: MutableMap<String, Bitmap> = mutableMapOf()
+private fun createTintedMarkerBitmap(
+    context: Context,
+    @DrawableRes iconResID: Int,
+    colorString: String,
+): Bitmap? {
+    // If cached bitmap is available, return it
+    if(bitmapCache.containsKey(colorString)) return bitmapCache[colorString]
+
+    // Get drawable instance from icon resource
+    val iconDrawable = ContextCompat.getDrawable(context, iconResID) ?: return null
+
+    // Get icon color int value
+    // - If color string is wrong, use default color as Black
+    val iconColor = try {
+        colorString.toColorInt()
+    } catch(e: IllegalArgumentException) {
+        e.printStackTrace()
+        Color.BLACK
+    }
+
+    // Generate tinted icon drawable
+    val mutatedDrawable = DrawableCompat.wrap(iconDrawable).mutate()
+    DrawableCompat.setTint(mutatedDrawable, iconColor)
+
+    // Get drawable size
+    val width = mutatedDrawable.intrinsicWidth
+    val height = mutatedDrawable.intrinsicHeight
+
+    // Generate canvas and draw as bitmap
+    val bitmap = createBitmap(width, height)
+    val canvas = Canvas(bitmap)
+    mutatedDrawable.setBounds(0, 0, canvas.width, canvas.height)
+    mutatedDrawable.draw(canvas)
+
+    // Cache generated bitmap with color key
+    bitmapCache[colorString] = bitmap
+
+    return bitmap
+}
