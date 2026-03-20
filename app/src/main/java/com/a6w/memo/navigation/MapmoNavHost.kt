@@ -1,5 +1,8 @@
 package com.a6w.memo.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,6 +19,20 @@ import com.a6w.memo.route.setting.SettingScreen
  * - Manage navigation for each screen
  * - Each routes are defined at [MapmoNavRoute] as data class
  */
+
+
+// ——— Constants ———————————————————————————————————————————
+
+private const val TRANSITION_DURATION_MS = 220
+private const val TRANSITION_EXIT_DURATION_MS = 90
+private const val TRANSITION_DELAY_MS = 90
+
+// ——— Transitions —————————————————————————————————————————
+
+private val navEnterTransition = fadeIn(tween(TRANSITION_DURATION_MS, delayMillis = TRANSITION_DELAY_MS))
+private val navExitTransition = fadeOut(tween(TRANSITION_EXIT_DURATION_MS))
+
+// ——— NavHost —————————————————————————————————————————————
 @Composable
 fun MapmoNavHost(
     modifier: Modifier = Modifier,
@@ -25,6 +42,10 @@ fun MapmoNavHost(
         modifier = modifier,
         navController = navController,
         startDestination = MapmoNavRoute.Home,
+        enterTransition = { navEnterTransition },
+        exitTransition = { navExitTransition },
+        popEnterTransition = { navEnterTransition },
+        popExitTransition = { navExitTransition },
     ) {
         // Home
         composable<MapmoNavRoute.Home> {
