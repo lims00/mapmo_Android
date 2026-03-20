@@ -1,9 +1,6 @@
 package com.a6w.memo.route.home.ui
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
@@ -29,6 +26,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
     navigateToMapmo: (mapmoID: String?) -> Unit,
+    // TODO: Setting navigation is not implemented
     navigateToSetting: () -> Unit,
 ) {
     // Lifecycle callback for Mapmo list refresh
@@ -74,38 +72,6 @@ fun HomeScreen(
                 modifier = modifier,
                 uiState = uiState,
             )
-        }
-    }
-
-    // TODO: Remove Debug UI
-    DebugUI(
-        navigateToMapmo = navigateToMapmo,
-        navigateToSetting = navigateToSetting,
-    )
-}
-
-/**
- * TODO: Remove Debug UI
- */
-@Composable
-private fun DebugUI(
-    modifier: Modifier = Modifier,
-    navigateToMapmo: (mapmoID: String?) -> Unit,
-    navigateToSetting: () -> Unit,
-) {
-    Column(
-        modifier = modifier,
-    ) {
-        Button(
-            onClick = { navigateToMapmo(null) },
-        ) {
-            Text("[DEBUG] Open Mapmo Screen")
-        }
-
-        Button(
-            onClick = navigateToSetting,
-        ) {
-            Text("[DEBUG] Open Setting Screen")
         }
     }
 }
