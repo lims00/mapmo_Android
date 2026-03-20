@@ -224,6 +224,7 @@ class MapmoRepositoryImpl @Inject constructor(
      */
     override suspend fun toggleNotification(
         mapmoID: String,
+        userID: String,
     ): Mapmo? {
         try {
             // Fetch the latest document directly from Firestore instead of using cache,
@@ -259,6 +260,9 @@ class MapmoRepositoryImpl @Inject constructor(
                     updatedAt = updatedAt,
                 )
             mapmoCache[mapmoID] = updatedMapmo
+
+            // Remove cached MapmoList Data
+            mapmoListRepositoryImpl.removeCachedMapmoList(userID)
             return updatedMapmo
         } catch (e: Exception) {
             e.printStackTrace()

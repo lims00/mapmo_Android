@@ -166,7 +166,7 @@ class HomeViewModel @Inject constructor(
             _uiState.update { HomeUiState.Loading }
 
             // Toggle mapmo notify enabled state
-            mapmoRepository.toggleNotification(mapmoID)
+            mapmoRepository.toggleNotification(mapmoID, TEST_USER_ID)
 
             // Reload Mapmo list data
             loadMapmoList()

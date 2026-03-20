@@ -280,6 +280,7 @@ class MapmoViewModel @Inject constructor(
 
             val updatedMapmo = mapmoRepository.toggleNotification(
                 mapmoID = currentMapmo!!.mapmoID,
+                userID = TEST_USER_ID,
             )
 
             if (updatedMapmo == null) {
