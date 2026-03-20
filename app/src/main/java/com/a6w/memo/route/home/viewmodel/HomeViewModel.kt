@@ -138,6 +138,24 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
+     * Delete mapmo
+     */
+    fun deleteMapmo(
+        mapmoID: String,
+    ) {
+        viewModelScope.launch {
+            // Set UI STate as Loading
+            _uiState.update { HomeUiState.Loading }
+
+            // Delete target mapmo
+            mapmoRepository.deleteMapmo(mapmoID, TEST_USER_ID)
+
+            // Reload Mapmo list data
+            loadMapmoList()
+        }
+    }
+
+    /**
      * Toggle mapmo notify enabled state
      */
     fun toggleMapmoNotify(
@@ -147,7 +165,8 @@ class HomeViewModel @Inject constructor(
             // Set UI STate as Loading
             _uiState.update { HomeUiState.Loading }
 
-            // TODO: Repository 연동
+            // Toggle mapmo notify enabled state
+            mapmoRepository.toggleNotification(mapmoID)
 
             // Reload Mapmo list data
             loadMapmoList()
