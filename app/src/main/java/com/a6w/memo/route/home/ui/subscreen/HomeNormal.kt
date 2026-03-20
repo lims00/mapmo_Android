@@ -10,9 +10,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
@@ -56,37 +63,64 @@ fun HomeNormal(
         bottomSheetState = rememberStandardBottomSheetState()
     )
 
-    // Scaffold UI with Bottom Sheet
-    // - UI Background: KakaoMap View
-    // - Bottom Sheet Content: Mapmo List UI
-    BottomSheetScaffold(
-        modifier = modifier,
-        scaffoldState = scaffoldState,
-        sheetDragHandle = { BottomSheetDefaults.DragHandle() },
-        sheetPeekHeight = BOTTOM_SHEET_HEIGHT_MINIMUM_DP,
-        sheetShape = RoundedCornerShape(
-            topStart = BOTTOM_SHEET_RADIUS_DP,
-            topEnd = BOTTOM_SHEET_RADIUS_DP,
-        ),
-        sheetContent = {
-            // Mapmo List
-            MapmoList(
-                modifier = Modifier
-                    .fillMaxHeight(0.5f)
-                    .fillMaxWidth(),
-                dataList = dataList,
-                onClickMapmo = navigateToMapmo,
-                onScrollMapmoList = moveMapCamera,
-            )
+    // Basic Scaffold UI
+    // - Content UI: Bottom Sheet based Mapmo UI
+    // - Floating Action Button: Create New Mapmo
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        // FAB for Create New Mapmo
+        floatingActionButton = {
+            FloatingActionButton(
+                modifier = Modifier,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                onClick = { navigateToMapmo(null) },
+            ) {
+                // Edit Icon (Pencil)
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = null,
+                )
+            }
         },
-    ) {
-        // Mapmo Map
-        MapmoMap(
+        // Show FAB at bottom right
+        floatingActionButtonPosition = FabPosition.End,
+    ) { innerPadding ->
+        // Bottom Sheet UI
+        // - UI Background: KakaoMap View
+        // - Bottom Sheet Content: Mapmo List UI
+        BottomSheetScaffold(
             modifier = Modifier
-                .fillMaxSize(),
-            mapCameraFocus = mapCameraFocus,
-            mapMarkerList = mapMarkerList
-        )
+                .fillMaxSize()
+                .padding(innerPadding),
+            scaffoldState = scaffoldState,
+            sheetDragHandle = { BottomSheetDefaults.DragHandle() },
+            sheetPeekHeight = BOTTOM_SHEET_HEIGHT_MINIMUM_DP,
+            sheetShape = RoundedCornerShape(
+                topStart = BOTTOM_SHEET_RADIUS_DP,
+                topEnd = BOTTOM_SHEET_RADIUS_DP,
+            ),
+            sheetContent = {
+                // Mapmo List
+                MapmoList(
+                    modifier = Modifier
+                        .fillMaxHeight(0.5f)
+                        .fillMaxWidth(),
+                    dataList = dataList,
+                    onClickMapmo = navigateToMapmo,
+                    onScrollMapmoList = moveMapCamera,
+                )
+            },
+        ) { paddingValues ->
+            // Mapmo Map
+            MapmoMap(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                mapCameraFocus = mapCameraFocus,
+                mapMarkerList = mapMarkerList
+            )
+        }
     }
 }
 
