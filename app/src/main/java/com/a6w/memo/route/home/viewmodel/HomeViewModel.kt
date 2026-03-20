@@ -10,6 +10,7 @@ import com.a6w.memo.domain.model.Label
 import com.a6w.memo.domain.model.Mapmo
 import com.a6w.memo.domain.model.MapmoList
 import com.a6w.memo.domain.repository.MapmoListRepository
+import com.a6w.memo.domain.repository.MapmoRepository
 import com.a6w.memo.route.home.ui.model.HomeListUiItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val mapmoListRepository: MapmoListRepository,
+    private val mapmoRepository: MapmoRepository,
 ): ViewModel() {
     companion object {
         // TODO: User ID must be managed with User Info
@@ -200,6 +202,7 @@ class HomeViewModel @Inject constructor(
         val mapmoID = this.mapmoID
         val mapmoTitle = this.title
         val mapmoUpdatedAt = DatetimeUtil.getUiDateStringFromMillis(this.updatedAt * 1000)
+        val mapmoIsNotifyEnabled = this.isNotifyEnabled
 
         // Label Data
         val labelLocation = label.location
@@ -210,6 +213,7 @@ class HomeViewModel @Inject constructor(
             mapmoLocation = labelLocation,
             mapmoTitle = mapmoTitle,
             mapmoUpdatedAt = mapmoUpdatedAt,
+            mapmoIsNotifyEnabled = mapmoIsNotifyEnabled,
         )
     }
 }

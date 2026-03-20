@@ -21,5 +21,6 @@ sealed interface HomeListUiItem {
         val mapmoLocation: Location,
         val mapmoTitle: String,
         val mapmoUpdatedAt: String,
+        val mapmoIsNotifyEnabled: Boolean,
     ): HomeListUiItem
 }
