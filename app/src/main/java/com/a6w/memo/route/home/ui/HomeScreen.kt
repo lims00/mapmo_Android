@@ -58,6 +58,7 @@ fun HomeScreen(
                 uiState = uiState,
                 moveMapCamera = viewModel::moveMapCameraToLabel,
                 navigateToMapmo = navigateToMapmo,
+                toggleMapmoNotify = viewModel::toggleMapmoNotify,
             )
         }
 

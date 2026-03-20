@@ -138,6 +138,16 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
+     * Toggle mapmo notify enabled state
+     */
+    fun toggleMapmoNotify(
+        mapmoID: String,
+    ) {
+        // TODO: Repository 연동
+    }
+
+
+    /**
      * Get mapmo list from repository and return it
      */
     private suspend fun getMapmoList(): MapmoList? {

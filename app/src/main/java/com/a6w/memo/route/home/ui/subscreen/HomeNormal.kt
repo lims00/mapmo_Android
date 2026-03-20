@@ -1,8 +1,6 @@
 package com.a6w.memo.route.home.ui.subscreen
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
-import com.a6w.memo.R
 import com.a6w.memo.common.model.MapCameraFocusData
 import com.a6w.memo.common.model.MapMarkerData
 import com.a6w.memo.common.ui.KakaoMapView
@@ -61,6 +58,7 @@ fun HomeNormal(
     uiState: HomeUiState.Normal,
     moveMapCamera: (labelID: String) -> Unit,
     navigateToMapmo: (mapmoID: String?) -> Unit,
+    toggleMapmoNotify: (mapmoID: String) -> Unit,
 ) {
     // UI State
     val dataList = uiState.dataList
@@ -119,6 +117,7 @@ fun HomeNormal(
                         .fillMaxWidth(),
                     dataList = dataList,
                     onClickMapmo = navigateToMapmo,
+                    onClickMapmoNotify = toggleMapmoNotify,
                     onScrollMapmoList = moveMapCamera,
                 )
             },
@@ -162,6 +161,7 @@ private fun MapmoList(
     modifier: Modifier = Modifier,
     dataList: List<HomeListUiItem>?,
     onClickMapmo: (mapmoID: String?) -> Unit,
+    onClickMapmoNotify: (mapmoID: String) -> Unit,
     onScrollMapmoList: (labelID: String) -> Unit,
 ) {
     // Exception when data list is null
@@ -227,6 +227,7 @@ private fun MapmoList(
                         mapmoUpdatedAt = mapmoUpdatedAt,
                         mapmoIsNotifyEnabled = mapmoIsNotifyEnabled,
                         onClick = { onClickMapmo(mapmoID) },
+                        onClickNotifyIcon = { onClickMapmoNotify(mapmoID) },
                     )
                 }
             }
@@ -287,6 +288,7 @@ private fun MapmoItem(
     mapmoUpdatedAt: String,
     mapmoIsNotifyEnabled: Boolean,
     onClick: () -> Unit,
+    onClickNotifyIcon: () -> Unit,
 ) {
     // Set notification icon based on enabled state
     val notificationIcon = if(mapmoIsNotifyEnabled) {
@@ -319,10 +321,16 @@ private fun MapmoItem(
         }
 
         // Mapmo notification on/off button
-        Icon(
-            imageVector = notificationIcon,
-            contentDescription = null,
-        )
+        Box(
+            modifier = Modifier
+                .clickable(onClick = onClickNotifyIcon),
+        ) {
+            Icon(
+                modifier = Modifier
+                    .size(24.dp),
+                imageVector = notificationIcon,
+                contentDescription = null,
+            )
+        }
     }
-
 }
