@@ -277,18 +277,12 @@ class MapmoViewModel @Inject constructor(
             val currentNotification = currentMapmo?.isNotifyEnabled ?: return@launch
 
             val isNotifyEnabled = !currentNotification
-            val updatedMapmo = currentMapmo?.copy(
-                isNotifyEnabled = isNotifyEnabled
+
+            val updatedMapmo = mapmoRepository.toggleNotification(
+                mapmoID = currentMapmo!!.mapmoID,
             )
 
-            if (updatedMapmo == null) return@launch
-
-            val success = mapmoRepository.updateMapmo(
-                mapmoContent = updatedMapmo,
-                userID = TEST_USER_ID,
-            )
-
-            if (!success) {
+            if (updatedMapmo == null) {
                 // Rollback to previous notification state on failure
                 _uiState.update {
                     it.copy(
@@ -300,7 +294,7 @@ class MapmoViewModel @Inject constructor(
                 currentMapmo = updatedMapmo
                 // Register to Geofencing Service
                 val mapmoID = updatedMapmo.mapmoID
-                if (isNotifyEnabled) {
+                if (updatedMapmo.isNotifyEnabled) {
                     val location = currentLabel!!.location
                     geofenceRepository.registerGeofence(mapmoID, location)
                 } else {
@@ -309,7 +303,7 @@ class MapmoViewModel @Inject constructor(
 
                 _uiState.update {
                     it.copy(
-                        isNotifyEnabled = !currentNotification,
+                        isNotifyEnabled = updatedMapmo.isNotifyEnabled,
                         errorMessage = null,
                     )
                 }
