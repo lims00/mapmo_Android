@@ -46,6 +46,9 @@ class HomeViewModel @Inject constructor(
      */
     fun loadMapmoList() {
         viewModelScope.launch {
+            // Set UI STate as Loading
+            _uiState.update { HomeUiState.Loading }
+
             // Initialize mapmo list state
             mapmoList = getMapmoList()
 
