@@ -1,5 +1,8 @@
 package com.a6w.memo.route.home.ui.subscreen
 
+import android.annotation.SuppressLint
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,9 +31,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
+import com.a6w.memo.R
 import com.a6w.memo.common.model.MapCameraFocusData
 import com.a6w.memo.common.model.MapMarkerData
 import com.a6w.memo.common.ui.KakaoMapView
@@ -67,7 +72,8 @@ fun HomeNormal(
     // - Content UI: Bottom Sheet based Mapmo UI
     // - Floating Action Button: Create New Mapmo
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize(),
         // FAB for Create New Mapmo
         floatingActionButton = {
             FloatingActionButton(
@@ -92,8 +98,9 @@ fun HomeNormal(
         BottomSheetScaffold(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(bottom = innerPadding.calculateBottomPadding()),
             scaffoldState = scaffoldState,
+            sheetContainerColor = Color.White,
             sheetDragHandle = { BottomSheetDefaults.DragHandle() },
             sheetPeekHeight = BOTTOM_SHEET_HEIGHT_MINIMUM_DP,
             sheetShape = RoundedCornerShape(
@@ -217,6 +224,17 @@ private fun MapmoList(
                     )
                 }
             }
+        }
+
+        // Mapmo banner image
+        // - For scroll offset
+        item {
+            Image(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                painter = painterResource(com.a6w.memo.R.drawable.mapmo_banner),
+                contentDescription = null,
+            )
         }
     }
 }
